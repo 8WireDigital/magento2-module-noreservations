@@ -1,0 +1,31 @@
+{
+    "name": "eightwire/magento2-module-noreservations",
+    "description": "",
+    "require": {
+        "magento/magento-composer-installer": "*",
+        "magento/module-inventory": "^1.0",
+        "magento/module-inventory-shipping": "^1.0"
+
+    },
+    "type": "magento2-module",
+    "license": [
+        "OSL-3.0",
+        "AFL-3.0"
+    ],
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "EightWire\\NoReservations\\": ""
+        }
+    },
+    "extra": {
+        "map": [
+            [
+                "*",
+                "EightWire/NoReservations"
+            ]
+        ]
+    }
+}

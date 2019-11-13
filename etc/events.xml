@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="sales_order_shipment_save_after">
+        <!-- disable core observer so that source stock is not deducted on shipments -->
+        <observer name="inventory_sales_source_deduction_processor" instance="Magento\InventoryShipping\Observer\SourceDeductionProcessor" disabled="true"/>
+    </event>
+    <event name="sales_order_invoice_save_after">
+        <!-- add our own observer on invoice rather than shipment -->
+        <observer name="noreservations_inventory_sales_source_deduction_processor" instance="EightWire\NoReservations\Observer\SourceDeductionProcessor" />
+    </event>
+</config>
