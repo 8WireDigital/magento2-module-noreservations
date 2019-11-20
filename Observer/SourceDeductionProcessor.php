@@ -22,9 +22,6 @@ use Magento\Sales\Api\Data\OrderItemInterface;
 use Magento\InventorySalesApi\Api\Data\ItemToSellInterfaceFactory;
 use Magento\InventorySalesApi\Api\PlaceReservationsForSalesEventInterface;
 
-/**
- * Class SourceDeductionProcessor
- */
 class SourceDeductionProcessor implements ObserverInterface
 {
     /**
@@ -111,7 +108,6 @@ class SourceDeductionProcessor implements ObserverInterface
 
         foreach ($sourceDeductionRequests as $sourceDeductionRequest) {
             $this->sourceDeductionService->execute($sourceDeductionRequest);
-//            $this->placeCompensatingReservation($sourceDeductionRequest);
         }
     }
 
