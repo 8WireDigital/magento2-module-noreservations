@@ -1,14 +1,10 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
-    <!-- add plugin around Magento\InventorySales\Model\PlaceReservationsForSalesEvent so that we can remove this functionality -->
-    <type name="Magento\InventorySales\Model\PlaceReservationsForSalesEvent">
-        <plugin name="EightWireNrPlaceReservationsForSalesEventPlugin" type="EightWire\NoReservations\Plugin\PlaceReservationsForSalesEventPlugin" />
-    </type>
-
-    <!-- If the order is invoiced during it's creation this plugin can throw errors on checkout when stock is at 1 due
-         to it already been deducted by on on invoice observer. As we aren't using reservations we are just removing
-         the plugin completely as we don't need it. -->
+    <!-- replace Magento\InventorySales\Plugin\Sales\OrderManagement\AppendReservationsAfterOrderPlacementPlugin in order to bypass it programmatically -->
     <type name="Magento\Sales\Api\OrderManagementInterface">
         <plugin name="inventory_reservations_placement" type="Magento\InventorySales\Plugin\Sales\OrderManagement\AppendReservationsAfterOrderPlacementPlugin" disabled="true" />
+    </type>
+    <type name="Magento\Sales\Api\OrderManagementInterface">
+        <plugin name="noreservations_eightwire_inventory_reservations_placement" type="EightWire\NoReservations\Plugin\AppendReservationsAfterOrderPlacementPlugin" />
     </type>
 </config>
