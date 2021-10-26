@@ -21,8 +21,12 @@ use Magento\Sales\Api\Data\InvoiceInterface;
 use Magento\Sales\Api\Data\OrderItemInterface;
 use Magento\InventorySalesApi\Api\Data\ItemToSellInterfaceFactory;
 use Magento\InventorySalesApi\Api\PlaceReservationsForSalesEventInterface;
+use Magento\Framework\App\Request\DataPersistorInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\StoreManagerInterface;
 
-class SourceDeductionProcessor implements ObserverInterface
+class InvoiceSourceDeductionProcessor implements ObserverInterface
 {
     /**
      * @var GetSourceSelectionResultFromInvoice
@@ -55,12 +59,30 @@ class SourceDeductionProcessor implements ObserverInterface
     private $placeReservationsForSalesEvent;
 
     /**
+     * @var DataPersistorInterface
+     */
+    private $dataPersistor;
+
+    /**
+     * @var ScopeConfigInterface
+     */
+    private $scopeConfig;
+
+    /**
+     * @var StoreManagerInterface
+     */
+    private $storeManager;
+
+    /**
      * @param GetSourceSelectionResultFromInvoice $getSourceSelectionResultFromInvoice
      * @param SourceDeductionServiceInterface $sourceDeductionService
      * @param SourceDeductionRequestsFromSourceSelectionFactory $sourceDeductionRequestsFromSourceSelectionFactory
      * @param SalesEventInterfaceFactory $salesEventFactory
      * @param ItemToSellInterfaceFactory $itemToSellFactory
      * @param PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent
+     * @param DataPersistorInterface $dataPersistor
+     * @param ScopeConfigInterface $scopeConfig
+     * @param StoreManagerInterface $storeManager
      */
     public function __construct(
         GetSourceSelectionResultFromInvoice $getSourceSelectionResultFromInvoice,
@@ -68,7 +90,10 @@ class SourceDeductionProcessor implements ObserverInterface
         SourceDeductionRequestsFromSourceSelectionFactory $sourceDeductionRequestsFromSourceSelectionFactory,
         SalesEventInterfaceFactory $salesEventFactory,
         ItemToSellInterfaceFactory $itemToSellFactory,
-        PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent
+        PlaceReservationsForSalesEventInterface $placeReservationsForSalesEvent,
+        DataPersistorInterface $dataPersistor,
+        ScopeConfigInterface $scopeConfig,
+        StoreManagerInterface $storeManager
     ) {
         $this->getSourceSelectionResultFromInvoice = $getSourceSelectionResultFromInvoice;
         $this->sourceDeductionService = $sourceDeductionService;
@@ -76,6 +101,9 @@ class SourceDeductionProcessor implements ObserverInterface
         $this->salesEventFactory = $salesEventFactory;
         $this->itemToSellFactory = $itemToSellFactory;
         $this->placeReservationsForSalesEvent = $placeReservationsForSalesEvent;
+        $this->dataPersistor = $dataPersistor;
+        $this->scopeConfig = $scopeConfig;
+        $this->storeManager = $storeManager;
     }
 
     /**
@@ -84,10 +112,22 @@ class SourceDeductionProcessor implements ObserverInterface
      */
     public function execute(EventObserver $observer)
     {
-
         /** @var \Magento\Sales\Model\Order\Invoice $invoice */
         $invoice = $observer->getEvent()->getInvoice();
         if (!$this->isValid($invoice)) {
+            return;
+        }
+
+        // if module is enabled in configuration for the order website, return observer
+        $websiteId = (int)$this->storeManager->getStore($invoice->getStoreId())->getWebsiteId();
+        $websiteCode = $this->storeManager->getWebsite($websiteId)->getCode();
+        $enabled = $this->scopeConfig->getValue('eightwirenoreservations/options/enabled', ScopeInterface::SCOPE_WEBSITE, $websiteCode);
+        if(!$enabled){
+            return;
+        }
+
+        // get the persitant variable to avoid the execution of this observer more than once
+        if ($this->dataPersistor->get('noreservation_invoice_deduction_success') === $invoice->getOrder()->getIncrementId()) {
             return;
         }
 
@@ -109,6 +149,9 @@ class SourceDeductionProcessor implements ObserverInterface
         foreach ($sourceDeductionRequests as $sourceDeductionRequest) {
             $this->sourceDeductionService->execute($sourceDeductionRequest);
         }
+
+        // set a persitant variable to avoid the execution of thi observer twice
+        $this->dataPersistor->set('noreservation_invoice_deduction_success', $invoice->getOrder()->getIncrementId());
     }
 
     /**
