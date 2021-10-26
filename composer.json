@@ -2,7 +2,6 @@
     "name": "eightwire/magento2-module-noreservations",
     "description": "",
     "require": {
-        "magento/magento-composer-installer": "*",
         "magento/module-inventory": "^1.0",
         "magento/module-inventory-shipping": "^1.0"
 
