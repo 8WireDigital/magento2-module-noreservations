@@ -18,13 +18,5 @@
         "psr-4": {
             "EightWire\\NoReservations\\": ""
         }
-    },
-    "extra": {
-        "map": [
-            [
-                "*",
-                "EightWire/NoReservations"
-            ]
-        ]
     }
 }
